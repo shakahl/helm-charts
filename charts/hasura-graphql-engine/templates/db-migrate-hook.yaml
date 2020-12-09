@@ -21,7 +21,7 @@ spec:
     spec:
       restartPolicy: Never
       imagePullSecrets:
-        {{- toYaml .Values.image.secrets | indent 10 }}
+        {{- toYaml .Values.imagePullSecrets | nindent 10 }}
       containers:
         - name: {{ .Chart.Name }}
           image: {{ template "imagenameCliMigrationsV2" . }}

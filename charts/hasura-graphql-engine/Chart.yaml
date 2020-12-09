@@ -1,6 +1,16 @@
 apiVersion: v2
 name: hasura-graphql-engine
-description: Hasura GraphQL Engine
+
+description: Hasura is an instant GraphQL with built-in authorization for your data.
+
+keywords:
+  - hasura
+  - graphql
+  - engine
+  - api
+  - gateway
+  - microservice
+  - distributed
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -19,3 +29,14 @@ version: 0.0.1
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
 appVersion: "v1.0.0"
+
+home: https://github.com/hasura/graphql-engine
+
+sources:
+  - https://github.com/shakahl/helm-charts/charts/hasura-graphql-engine/
+
+maintainers:
+  - name: shakahl
+    email: szelpalsoma@gmail.com
+
+engine: gotpl

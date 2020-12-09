@@ -1,0 +1,12 @@
+shell: bash
+
+commands:
+  lint:
+    description: Lint Helm Charts
+    cmd: ./ct.sh lint
+
+  clean:
+    description: Cleanup temporary files and folders ...
+    cmd: |
+      echo "Deleting: .cache ..." && rm -rf ./.cache;
+      echo "Deleting: pyvenv.cfg" && rm -f ./pyvenv.cfg;
