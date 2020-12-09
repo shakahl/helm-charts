@@ -1,0 +1,15 @@
+{{- if .Values.networkPolicy.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "hasura-graphql-engine.fullname" . }}
+  labels:
+    {{- include "hasura-graphql-engine.labels" . | nindent 4 }}
+    app: {{ include "hasura-graphql-engine.name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+{{ toYaml .Values.networkPolicy.spec | indent 2 }}
+{{- end -}}
+

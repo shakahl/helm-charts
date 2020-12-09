@@ -1,0 +1,46 @@
+{{- if .Values.application.initializeCommand -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "trackableappname" . }}-db-initialize
+  labels:
+    app: {{ include "hasura-graphql-engine.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version| replace "+" "_" }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-weight": "0"
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ template "appname" . }}
+        release: {{ .Release.Name }}
+    spec:
+      restartPolicy: Never
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: {{ template "imagename" . }}
+        command: ["/bin/sh"]
+        args: ["-c", "{{ .Values.application.initializeCommand }}"]
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- if .Values.application.secretName }}
+        envFrom:
+        - secretRef:
+            name: {{ .Values.application.secretName }}
+        {{- end }}
+        env:
+        {{- if .Values.hasura.serverOptions }}
+          {{ toYaml .Values.hasura.serverOptions | indent 12 }}
+        {{- end }}
+        {{- range $cfgKey, $cfgVal := .Values.hasura.config }}
+          - name: {{ .Values.hasura.envPrefix | upper  -}}{{ $cfgKey | upper }}
+            value: {{ tpl $cfgVal $ | quote }}
+        {{- end }}
+{{- end -}}

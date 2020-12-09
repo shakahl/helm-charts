@@ -1,0 +1,100 @@
+apiVersion: {{ default "extensions/v1beta1" .Values.deploymentApiVersion }}
+kind: Deployment
+metadata:
+  name: {{ include "hasura-graphql-engine.fullname" . }}
+  labels:
+    {{- include "hasura-graphql-engine.labels" . | nindent 4 }}
+    app: {{ include "hasura-graphql-engine.name" . }}
+    track: "{{ .Values.application.track }}"
+    tier: "{{ .Values.application.tier }}"
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "hasura-graphql-engine.selectorLabels" . | nindent 6 }}
+      {{- if or .Values.enableSelector (eq (default "extensions/v1beta1" .Values.deploymentApiVersion) "apps/v1") }}
+      app: {{ template "appname" . }}
+      track: "{{ .Values.application.track }}"
+      tier: "{{ .Values.application.tier }}"
+      release: {{ .Release.Name }}
+      {{- end }}
+  {{ if .Values.strategyType -}}
+  strategy:
+    type: {{ .Values.strategyType | quote }}
+  {{- end }}
+
+  template:
+    metadata:
+      labels:
+        {{- include "hasura-graphql-engine.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "hasura-graphql-engine.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.application.secretName }}
+          envFrom:
+            - secretRef:
+              name: {{ .Values.application.secretName }}
+          {{- end }}
+          env:
+          - name: HASURA_GRAPHQL_DATABASE_URL
+            value: "{{ .Values.hasura.graphql.database_url }}"
+          - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+            value: "{{ .Values.hasura.graphql.enable_console }}"
+          - name: HASURA_GRAPHQL_ADMIN_SECRET
+            value: "{{ .Values.hasura.admin.secret }}"
+          - name: HASURA_GRAPHQL_ENABLED_LOG_TYPES
+            value: "{{ .Values.hasura.graphql.enabled_log_types }}"
+          {{- if .Values.hasura.serverOptions }}
+          {{ toYaml .Values.hasura.serverOptions | indent 10 }}
+          {{- end }}
+          {{- range $cfgKey, $cfgVal := .Values.hasura.config }}
+          - name: {{ .Values.hasura.envPrefix | upper  -}}{{ $cfgKey | upper }}
+            value: {{ tpl $cfgVal $ | quote }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.livenessProbe.path | default "/healthz" }}
+              scheme: HTTP
+              port: http
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.path | default "/healthz" }}
+              scheme: HTTP
+              port: http
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
