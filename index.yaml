@@ -1,0 +1,33 @@
+apiVersion: v1
+entries:
+  hasura-graphql-engine:
+  - apiVersion: v2
+    appVersion: v1.0.0
+    created: "2020-12-09T19:05:28.880460274Z"
+    description: Hasura is an instant GraphQL with built-in authorization for your data.
+    digest: 09e191a88ad64b98c6e0328ac85ded2f6489d0376d6f387827eb43017051455a
+    home: https://github.com/hasura/graphql-engine
+    icon: https://raw.githubusercontent.com/hasura/graphql-engine/master/assets/brand/hasura_icon_blue.svg
+    keywords:
+    - hasura
+    - graphql
+    - engine
+    - api
+    - gateway
+    - microservice
+    - distributed
+    - api
+    - framework
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - email: szelpalsoma@gmail.com
+      name: shakahl
+    name: hasura-graphql-engine
+    sources:
+    - https://github.com/shakahl/helm-charts/
+    - https://github.com/hasura/graphql-engine
+    type: application
+    urls:
+    - https://github.com/shakahl/helm-charts/releases/download/hasura-graphql-engine-0.0.1/hasura-graphql-engine-0.0.1.tgz
+    version: 0.0.1
+generated: "2020-12-09T19:05:28.117408609Z"
