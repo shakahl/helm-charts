@@ -2,7 +2,7 @@
 remote: 'origin'
 target-branch: 'master'
 chart-dirs:
-  - 'charts'
+  - './charts'
 chart-repos:
   - 'stable=https://charts.helm.sh/stable'
   # - shakahl=https://shakahl.github.io/helm-charts
