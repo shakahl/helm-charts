@@ -25,9 +25,9 @@ jobs:
         uses: hashicorp/setup-terraform@v1
         with:
           # terraform_version: 0.13.0:
-          cli_config_credentials_hostname: 'terraform.example.com'
+          # cli_config_credentials_hostname: 'terraform.example.com'
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-          wrapper_script: false
+          wrapper_script: true
 
       # - name: Setup Node.js 12.x
       #   uses: actions/setup-node@v1
