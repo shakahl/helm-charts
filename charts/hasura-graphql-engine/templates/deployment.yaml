@@ -26,16 +26,19 @@ spec:
   strategy:
     type: {{ .Values.strategyType | quote }}
   {{- end }}
-
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations: 
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "hasura-graphql-engine.selectorLabels" . | nindent 8 }}
     spec:
-    {{- with .Values.imagePullSecrets }}
+      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
-    {{- end }}
+      {{- end }}
       serviceAccountName: {{ include "hasura-graphql-engine.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
@@ -43,28 +46,23 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           {{- if .Values.application.secretName }}
           envFrom:
             - secretRef:
-              name: {{ .Values.application.secretName }}
-          {{- end }}
-          env:
-          - name: HASURA_GRAPHQL_DATABASE_URL
-            value: "{{ .Values.hasura.graphql.database_url }}"
-          - name: HASURA_GRAPHQL_ENABLE_CONSOLE
-            value: "{{ .Values.hasura.graphql.enable_console }}"
-          - name: HASURA_GRAPHQL_ADMIN_SECRET
-            value: "{{ .Values.hasura.admin.secret }}"
-          - name: HASURA_GRAPHQL_ENABLED_LOG_TYPES
-            value: "{{ .Values.hasura.graphql.enabled_log_types }}"
-          {{- if .Values.hasura.serverOptions }}
-          {{ toYaml .Values.hasura.serverOptions | indent 10 }}
+              name: {{ .Values.application.secretName | quote -}}
+          {{ end }}
+          {{- if .Values.hasura.env }}
+          env: 
+            {{- toYaml .Values.hasura.env | nindent 12 -}}
+          {{ end -}}
+          {{ if .Values.hasura.serverOptions -}}
+          {{- toYaml .Values.hasura.serverOptions | indent 12 }}
           {{- end }}
           {{- range $cfgKey, $cfgVal := .Values.hasura.config }}
-          - name: {{ .Values.hasura.envPrefix | upper  -}}{{ $cfgKey | upper }}
-            value: {{ tpl $cfgVal $ | quote }}
+            - name: {{ template "prefixenv" $cfgKey }}
+              value: {{ tpl (toString $cfgVal) $ | quote }}
           {{- end }}
           ports:
             - name: http
@@ -84,17 +82,19 @@ spec:
               port: http
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
             timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          {{ if .Values.resources -}}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-    {{- with .Values.affinity }}
+      {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
+      {{- end }}
+      {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
-    {{- end }}
+      {{- end }}

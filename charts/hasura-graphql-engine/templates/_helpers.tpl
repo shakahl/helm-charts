@@ -93,9 +93,9 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 
 {{- define "imagenameCliMigrationsV2" -}}
 {{- if eq .Values.image.tag "" -}}
-{{- .Values.image.repositoryCliMigrationsV2 -}}
+{{- .Values.image.repository -}}.cli-migrations-v2
 {{- else -}}
-{{- printf "%s:%s" .Values.image.repositoryCliMigrationsV2 .Values.image.tag -}}
+{{- printf "%s:%s" .Values.image.repository .Values.image.tag -}}.cli-migrations-v2
 {{- end -}}
 {{- end -}}
 
@@ -159,3 +159,9 @@ Get SecRule's arguments with unescaped single&double quotes
 {{- printf "SecRule %s %s %s" .variable $operator $action -}}
 {{- end -}}
 
+{{/*
+Formats environment variable name
+*/}}
+{{- define "prefixenv" -}}
+{{- "HASURA_GRAPHQL_" | upper -}}{{- . | upper }}
+{{- end -}}

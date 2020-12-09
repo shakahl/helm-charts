@@ -21,24 +21,28 @@ spec:
     spec:
       restartPolicy: Never
       imagePullSecrets:
-{{ toYaml .Values.image.secrets | indent 10 }}
+        {{- toYaml .Values.image.secrets | indent 10 }}
       containers:
-      - name: {{ .Chart.Name }}
-        image: {{ template "imagenameCliMigrationsV2" . }}
-        command: ["/bin/sh"]
-        args: ["-c", "{{ .Values.application.migrateCommand }}"]
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        {{- if .Values.application.secretName }}
-        envFrom:
-        - secretRef:
-            name: {{ .Values.application.secretName }}
-        {{- end }}
-        env:
-        {{- if .Values.hasura.serverOptions }}
-          {{ toYaml .Values.hasura.serverOptions | indent 10 }}
-        {{- end }}
-        {{- range $cfgKey, $cfgVal := .Values.hasura.config }}
-          - name: {{ .Values.hasura.envPrefix | upper  -}}{{ $cfgKey | upper }}
-            value: {{ tpl $cfgVal $ | quote }}
-        {{- end }}
+        - name: {{ .Chart.Name }}
+          image: {{ template "imagenameCliMigrationsV2" . }}
+          command: ["/bin/sh"]
+          args: ["-c", {{ .Values.application.migrateCommand | quote }}]
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.application.secretName }}
+          envFrom:
+            - secretRef:
+              name: {{ .Values.application.secretName | quote -}}
+          {{- end }}
+          {{- if .Values.hasura.env }}
+          env: 
+            {{- toYaml .Values.hasura.env | nindent 10 }}
+          {{ end }}
+          {{- if .Values.hasura.serverOptions -}}
+          {{ toYaml .Values.hasura.serverOptions | indent 8 -}}
+          {{ end }}
+          {{ range $cfgKey, $cfgVal := .Values.hasura.config -}}
+          - name: {{ template "prefixenv" $cfgKey }}
+            value: {{ tpl (toString $cfgVal) $ | quote }}
+          {{ end }}
+          
 {{- end -}}

@@ -4,6 +4,12 @@
 
 replicaCount: 1
 
+labels: {}
+
+selectorLabels: {}
+
+podAnnotations: {}
+
 image:
   tag: v1.3.3
   repository: hasura/graphql-engine
@@ -21,8 +27,8 @@ application:
   tier: web
   migrateCommand: "hasura migrate apply"
   initializeCommand: "hasura seeds apply"
-  secretName:
-  secretChecksum:
+  secretName: null
+  secretChecksum: null
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -31,18 +37,18 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name:
+  name: ""
 
-podSecurityContext: {}
-  # fsGroup: 2000
+podSecurityContext:
+  fsGroup: 2000
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
 
 strategyType: 
 
@@ -144,19 +150,15 @@ networkPolicy:
 
 # Hasura graphql-engine configuration
 hasura:
-  # graphql:  
-    
-  #   # PostgreSQL database DSN
-  #   database_url: "postgres://username:password@hostname:port/dbname"
-    
-  #   # Enables the web console
-  #   enable_console: "true"
-    
-  #   # Enabled log types
-  #   enabled_log_types: "startup, http-log, webhook-log, websocket-log, query-log"
-    
-  # admin:
-  #   secret: ""
+  env:
+    - name: HASURA_GRAPHQL_DATABASE_URL
+      value: "postgres://username:password@hostname:port/dbname"
+    - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+      value: "false"
+    - name: HASURA_GRAPHQL_ENABLE_LOG_TYPES
+      value: "startup, http-log, webhook-log, websocket-log, query-log"
+    - name: HASURA_GRAPHQL_ADMIN_SECRET
+      value: ""
 
   serverOptions: {}
 
@@ -171,7 +173,7 @@ hasura:
     SERVER_HOST: "*"
 
     # Enable the Hasura Console (served by the server on / and /console) (default: false)
-    ENABLE_CONSOLE: false
+    ENABLE_CONSOLE: "false"
     
     # Admin secret key, required to access this instance. This is mandatory when you use webhook or JWT.
     ADMIN_SECRET: "" # !
@@ -198,16 +200,16 @@ hasura:
     CORS_DOMAIN: "*"
 
     # Disable CORS. Do not send any CORS headers on any request.
-    DISABLE_CORS: null
+    DISABLE_CORS: ""
 
     # Read cookie on WebSocket initial handshake even when CORS is disabled.
     # This can be a potential security flaw! Please make sure you know what
     # you're doing. This configuration is only applicable when CORS is disabled.
     # (default: false)
-    WS_READ_COOKIE: false
+    WS_READ_COOKIE: "false"
 
     # Enable anonymous telemetry (default: true)
-    ENABLE_TELEMETRY: true
+    ENABLE_TELEMETRY: "true"
 
     # Maximum number of concurrent http workers delivering events at any time (default: 100)
     EVENTS_HTTP_POOL_SIZE: 100
@@ -228,7 +230,7 @@ hasura:
     PG_TIMEOUT: "180 sec"
 
     # Use prepared statements for queries (default: true)
-    USE_PREPARED_STATEMENTS: true
+    USE_PREPARED_STATEMENTS: "true"
 
     # Transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
     TX_ISOLATION: "read-commited"
@@ -236,7 +238,7 @@ hasura:
     # Stringify certain Postgres numeric types, specifically bigint, numeric, decimal and
     # double precision as they don't fit into the IEEE-754 spec for JSON encoding-decoding.
     # (default: false)
-    STRINGIFY_NUMERIC_TYPES: false
+    STRINGIFY_NUMERIC_TYPES: "false"
 
     # Comma separated list of APIs (options: metadata, graphql, pgdump) to be enabled.
     # (default: metadata,graphql,pgdump)
@@ -251,7 +253,7 @@ hasura:
 
     # Restrict queries allowed to be executed by the GraphQL engine to those that are part of the configured
     # allow-list. Default: false *(Available for versions > v1.0.0-beta.1)*
-    ENABLE_ALLOWLIST: false
+    ENABLE_ALLOWLIST: "false"
 
     # Set the value to /srv/console-assets for the console to load assets from the server itself
     # instead of CDN *(Available for versions > v1.0.0-beta.1)*
@@ -266,10 +268,10 @@ hasura:
     LOG_LEVEL: "info"
 
     # Set dev mode for GraphQL requests; include the internal key in the errors extensions of the response (if required).
-    DEV_MODE: false
+    DEV_MODE: "false"
 
     # Include the internal key in the errors extensions of the response for GraphQL requests with the admin role (if required).
-    ADMIN_INTERNAL_ERRORS: false
+    ADMIN_INTERNAL_ERRORS: "false"
 
     # cli-migrations.v2 configuration
     # -------------------------------
@@ -281,7 +283,7 @@ hasura:
     MIGRATIONS_DATABASE_ENV_VAR: DATABASE_URL
     MIGRATIONS_DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/postgres'
 
-    DATABASE_URL: null
+    DATABASE_URL: ""
     
     MIGRATIONS_SERVER_PORT: 9691
 
