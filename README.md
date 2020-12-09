@@ -17,7 +17,7 @@ helm repo add stable https://charts.helm.sh/stable/
 helm repo add shakahl https://shakahl.github.io/helm-charts/
 ```
 
-3. View InfluxData Helm charts:
+3. View Helm charts in this repository:
 
 ```console
 helm search repo shakahl
