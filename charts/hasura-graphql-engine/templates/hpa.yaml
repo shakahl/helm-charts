@@ -1,0 +1,22 @@
+{{- if and .Values.hpa.enabled .Values.resources.requests -}}
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "hasura-graphql-engine.fullname" . }}
+  labels:
+    {{- include "hasura-graphql-engine.labels" . | nindent 4 }}
+    app: {{ include "hasura-graphql-engine.name" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  scaleTargetRef:
+    kind: Deployment
+    name: {{ include "hasura-graphql-engine.name" . }}
+    apiVersion: apps/v1beta1
+  minReplicas: {{ .Values.hpa.minReplicas }}
+  maxReplicas: {{ .Values.hpa.maxReplicas }}
+  targetCPUUtilizationPercentage: {{ .Values.hpa.targetCPUUtilizationPercentage }}
+{{- end -}}
+
+

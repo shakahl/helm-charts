@@ -6,3 +6,7 @@
 
 # Terraform
 /terraform/.terraform
+/.cache
+/.env
+/.env-shell
+/pyvenv.cfg

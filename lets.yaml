@@ -1,0 +1,24 @@
+shell: bash
+
+commands:
+  lint:
+    description: Lint Helm Charts
+    cmd: ./ct.sh lint
+
+  clean:
+    description: Cleanup temporary files and folders ...
+    cmd: |
+      echo "Deleting: .cache ..." && rm -rf ./.cache;
+      echo "Deleting: pyvenv.cfg" && rm -f ./pyvenv.cfg;
+
+  deps:
+    description: 'Install dependencies ...'
+    cmd: |
+      echo "Checking command if exists: act (run GitHub Action locally) ...";
+      if ! command -v act &> /dev/null ; then
+        echo "Installing act to run GitHub Action locally ...";
+        curl https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+      fi
+
+      echo 
+      echo "All deps installed successfully!";

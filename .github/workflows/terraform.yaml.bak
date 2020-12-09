@@ -1,21 +1,20 @@
-name: "Terraform"
+name: 'Terraform'
 
 on:
   push:
     paths:
-      - ".github/workflows/terraform.yaml"
-      - "terraform/**"
+      - 'terraform/**'
     branches:
       - master
   pull_request:
 
-defaults:
-  run:
-    working-directory: ${{ env.tf_actions_working_dir }}
+# defaults:
+#   run:
+#     working-directory: ${{ env.tf_actions_working_dir }}
 
 jobs:
   terraform:
-    name: "Terraform"
+    name: 'Terraform'
     runs-on: ubuntu-latest
 
     steps:
@@ -26,7 +25,24 @@ jobs:
         uses: hashicorp/setup-terraform@v1
         with:
           # terraform_version: 0.13.0:
+          # cli_config_credentials_hostname: 'terraform.example.com'
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          wrapper_script: true
+
+      # - name: Setup Node.js 12.x
+      #   uses: actions/setup-node@v1
+      #   with:
+      #     node-version: '12.x'
+
+      # - name: Install
+      #   run: npm clean-install
+
+      # - name: Verify
+      #   if: runner.os == 'Linux'
+      #   run: |
+      #     npm run build
+      #     # Fail if "npm run build" generated new changes in dist
+      #     git update-index --refresh dist/* && git diff-index --quiet HEAD dist
 
       - name: Terraform Format
         id: fmt
@@ -37,8 +53,6 @@ jobs:
       - name: Terraform Init
         id: init
         run: terraform init
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

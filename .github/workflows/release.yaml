@@ -5,7 +5,7 @@ on:
     branches:
       - master
     paths:
-      - "**/Chart.yaml"
+      - '**/Chart.yaml'
 
 jobs:
   release:
@@ -13,6 +13,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Install GIT
+        if: ${{ !env.ACT }}
+        run: |
+          /bin/bash -c "/usr/bin/sudo /usr/bin/apt -y install git"
 
       - name: Fetch history
         run: git fetch --prune --unshallow
@@ -32,7 +37,7 @@ jobs:
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.1.0
         env:
-          CR_TOKEN: "${{ secrets.CR_TOKEN }}"
+          CR_TOKEN: '${{ secrets.CR_TOKEN }}'
         with:
           #The chart-releaser version to use (default: v1.1.0)
           version: v1.1.0
