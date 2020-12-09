@@ -50,6 +50,6 @@ jobs:
           CR_TOKEN: '${{ secrets.SECRET_GITHUB_TOKEN }}'
         with:
           version: v1.1.0
-          config: '.github/.cr.yaml'
-          charts_dir: ./charts
+          config: .github/.cr.yaml
+          # charts_dir: ./charts
           # charts_repo_url: '' # default: https://<owner>.github.io/<project>
