@@ -15,6 +15,7 @@ keywords:
   - microservice
   - distributed
   - api
+  - framework
 
 engine: gotpl
 
