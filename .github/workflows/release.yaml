@@ -5,6 +5,7 @@ on:
     branches:
       - master
     paths:
+      - '.github/workflows/release.yaml'
       - '**/Chart.yaml'
 
 jobs:
@@ -46,6 +47,6 @@ jobs:
           CR_TOKEN: '${{ secrets.SECRET_GITHUB_TOKEN }}'
         with:
           version: v1.1.0
-          # config: '.github/chart-releaser.yaml' # Optional config file for chart-releaser
+          config: '.github/.cr.yaml'
           charts_dir: ./charts
           # charts_repo_url: '' # default: https://<owner>.github.io/<project>

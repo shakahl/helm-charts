@@ -1,6 +1,8 @@
 owner: shakahl
 git-repo: helm-charts
-# package-path: .deploy
+index-path: .cr-index/index.yaml
+package-path: .cr-release-packages
 # token: 123456789
 git-base-url: https://api.github.com/
 git-upload-url: https://uploads.github.com/
+release-name-template: '{{ .Name }}-{{ .Version }}'
