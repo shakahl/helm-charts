@@ -14,8 +14,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
 
       # - name: Install local dependencies for "act"
       #   if: ${{ !env.ACT }}
@@ -40,6 +38,11 @@ jobs:
           curl -fsSLo get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
           chmod 700 get_helm.sh
           ./get_helm.sh
+
+      - name: Add dependency chart repos
+        run: |
+          helm repo add stable https://charts.helm.sh/stable/
+          helm repo add shakahl https://shakahl.github.io/helm-charts/
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.1.0
