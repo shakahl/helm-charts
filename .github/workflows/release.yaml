@@ -5,6 +5,7 @@ on:
     branches:
       - master
     paths:
+      - '.github/workflows/release.yaml'
       - '**/Chart.yaml'
 
 jobs:
@@ -14,18 +15,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install GIT
-        if: ${{ !env.ACT }}
-        run: |
-          /bin/bash -c "/usr/bin/sudo /usr/bin/apt -y install git"
+      # - name: Install local dependencies for "act"
+      #   if: ${{ !env.ACT }}
+      #   run: |
+      #     /bin/sh -c "ls"
 
       - name: Fetch history
-        run: git fetch --prune --unshallow
+        run: git fetch --prune # --unshallow
 
       - name: Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      # - name: Set up Helm
+      #   uses: azure/setup-helm@v1
+      #   id: install
 
       # See https://github.com/helm/chart-releaser-action/issues/6
       - name: Install Helm
@@ -34,18 +39,17 @@ jobs:
           chmod 700 get_helm.sh
           ./get_helm.sh
 
+      - name: Add dependency chart repos
+        run: |
+          helm repo add stable https://charts.helm.sh/stable/
+          helm repo add shakahl https://shakahl.github.io/helm-charts/
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.1.0
         env:
-          CR_TOKEN: '${{ secrets.CR_TOKEN }}'
+          CR_TOKEN: '${{ secrets.SECRET_GITHUB_TOKEN }}'
         with:
-          #The chart-releaser version to use (default: v1.1.0)
           version: v1.1.0
-          #
-          # Optional config file for chart-releaser
-          #config:
-          #
-          # The charts directory
+          config: '.github/.cr.yaml'
           charts_dir: ./charts
-          # The GitHub Pages URL to the charts repo (default: https://<owner>.github.io/<project>)
-          #charts_repo_url:
+          # charts_repo_url: '' # default: https://<owner>.github.io/<project>
