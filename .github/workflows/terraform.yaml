@@ -3,15 +3,14 @@ name: 'Terraform'
 on:
   push:
     paths:
-      - '.github/workflows/terraform.yaml'
       - 'terraform/**'
     branches:
       - master
   pull_request:
 
-defaults:
-  run:
-    working-directory: ${{ env.tf_actions_working_dir }}
+# defaults:
+#   run:
+#     working-directory: ${{ env.tf_actions_working_dir }}
 
 jobs:
   terraform:
