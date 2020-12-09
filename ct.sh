@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -o errexit
-set -o nounset
+#set -o nounset
 set -o pipefail
 
 CURRENT_DIR=$(dirname "${BASH_SOURCE[0]}")
@@ -15,6 +15,8 @@ CT_CONFIG_DIR="$CACHE_DIR/etc"
 CT_BIN="$CACHE_DIR/ct"
 VIRTUAL_ENV=""
 CT_ADD_PATH=""
+
+declare -a CT_BIN_EXTRA_ARGS=("$CT_BIN")
 
 show_help() {
   cat <<EOF
@@ -53,27 +55,41 @@ print_env() {
 }
 
 run_ct() {
+  local curarg
+  curarg="$1"
   while :; do
     case "${1:-}" in
     lint)
-      "$CT_BIN" lint --all
+      CT_BIN_EXTRA_ARGS=(${CT_BIN_EXTRA_ARGS[@]} "lint" "--all")
       shift
       ;;
     env)
       print_env "$@"
       exit 1
       ;;
-    *) ;;
+    *)
+      CT_BIN_EXTRA_ARGS=(${CT_BIN_EXTRA_ARGS[@]} "$@")
+      break
+      ;;
     esac
     shift
+
+    #[ -n "$@" ] && curarg2=(${CT_BIN_EXTRA_ARGS[@]} "$@") || break
+
   done
 
-  "$CT_BIN" "$@"
+  echo "CT_BIN_EXTRA_ARGS=\"${CT_BIN_EXTRA_ARGS[@]}\""
+
+  "${CT_BIN_EXTRA_ARGS[@]}"
   exit 0
 }
 
 parse_command_line() {
+  local curarg
+  #curarg="${1:-}"
+  #[ -n "$1" ] && curarg="${1:-}" || break
   while :; do
+    [ -n "$1" ] && curarg="${1:-}" || break
     case "${1:-}" in
     -h | --help)
       show_help
@@ -93,8 +109,8 @@ parse_command_line() {
       break
       ;;
     esac
-
     shift
+    curarg="$1"
   done
 }
 

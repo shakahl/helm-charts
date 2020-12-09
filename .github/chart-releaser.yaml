@@ -1,0 +1,6 @@
+owner: shakahl
+git-repo: helm-charts
+# package-path: .deploy
+# token: 123456789
+git-base-url: https://api.github.com/
+git-upload-url: https://uploads.github.com/
