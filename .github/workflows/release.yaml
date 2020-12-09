@@ -22,7 +22,7 @@ jobs:
       #     /bin/sh -c "ls"
 
       - name: Fetch history
-        run: git fetch --prune --unshallow
+        run: git fetch --prune # --unshallow
 
       - name: Configure Git
         run: |
