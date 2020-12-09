@@ -19,4 +19,6 @@
 .project
 .idea/
 *.tmproj
-.vscode/
+# helm/charts
+OWNERS
+hasura-graphql-engine-*.tgz
