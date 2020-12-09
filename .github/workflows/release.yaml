@@ -4,9 +4,17 @@ on:
   push:
     branches:
       - master
+      - main
     paths:
       - '.github/workflows/release.yaml'
       - '**/Chart.yaml'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: '${{ secrets.SECRET_GITHUB_TOKEN }}'
+  CR_TOKEN: '${{ secrets.SECRET_GITHUB_TOKEN }}'
 
 jobs:
   release:
@@ -15,22 +23,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      # - name: Install local dependencies for "act"
-      #   if: ${{ !env.ACT }}
-      #   run: |
-      #     /bin/sh -c "ls"
-
       - name: Fetch history
-        run: git fetch --prune # --unshallow
+        run: |
+          git fetch --prune --unshallow || echo "Unable to do git fetch --prune --unshallow ..."
+          git fetch --prune || echo "Unable to do git fetch --prune ..."
 
       - name: Configure Git
         run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
-      # - name: Set up Helm
-      #   uses: azure/setup-helm@v1
-      #   id: install
+          git config user.name "$GITHUB_ACTOR" || echo "Unable to set git config user.name ..."
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com" || echo "Unable to set git config user.email ..."
 
       # See https://github.com/helm/chart-releaser-action/issues/6
       - name: Install Helm
@@ -39,10 +40,22 @@ jobs:
           chmod 700 get_helm.sh
           ./get_helm.sh
 
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+          token: '${{ secrets.SECRET_GITHUB_TOKEN }}'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
       - name: Add dependency chart repos
         run: |
           helm repo add stable https://charts.helm.sh/stable/
-          helm repo add shakahl https://shakahl.github.io/helm-charts/
+          # helm repo add shakahl https://shakahl.github.io/helm-charts/
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.1.0

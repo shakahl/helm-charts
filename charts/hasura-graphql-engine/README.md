@@ -13,9 +13,19 @@ The Hasura GraphQL Engine Helm chart uses the [Helm](https://helm.sh) package ma
 
 ## Prerequisites
 
-- Helm v2 or later
-- Kubernetes 1.4+
+- Helm v3+
+- Kubernetes 1.16+
 - PostgreSQL database (11+)
+
+## Get Repo Info
+
+```console
+helm repo add shakahl https://shakahl.github.io/helm-charts/
+helm repo add stable https://charts.helm.sh/stable/
+helm repo update
+```
+
+_See [helm repo](https://helm.sh/docs/helm/helm_repo/) for command documentation._
 
 ## Install the chart
 
@@ -112,7 +122,7 @@ The following table lists configurable parameters, their descriptions, and their
 | hpa.targetCPUUtilizationPercentage |                                                                                                                                                   | 80                                                      |
 | podDisruptionBudget.enabled        |                                                                                                                                                   | false                                                   |
 | podDisruptionBudget.maxUnavailable |                                                                                                                                                   | 1                                                       |
-| hasura.graphql.*                   |                                                                                                                                                   | {}                                                      |
+| hasura.env.*                       |                                                                                                                                                   | {}                                                      |
 | hasura.serverOptions.*             |                                                                                                                                                   | {}                                                      |
 | hasura.envPrefix                   |                                                                                                                                                   | `HASURA_GRAPHQL_`                                       |
 | hasura.config.*                    | See [config options](#hasura-config-options)                                                                                                      | {}                                                      |
@@ -150,19 +160,18 @@ For information about running **Hasura GraphQL Engine** in Docker, see the [full
 
 # Hasura graphql-engine configuration
 hasura:
-  # graphql:  
-  #   # PostgreSQL database DSN
-  #   database_url: "postgres://username:password@hostname:port/dbname"
-  #   # Enables the web console
-  #   enable_console: "true"
-  #   # Enabled log types
-  #   enabled_log_types: "startup, http-log, webhook-log, websocket-log, query-log"
-  #   admin:
-  #     secret: ""
+
+  env:
+    - name: HASURA_GRAPHQL_DATABASE_URL
+      value: "postgres://username:password@hostname:port/dbname"
+    - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+      value: "false"
+    - name: HASURA_GRAPHQL_ENABLE_LOG_TYPES
+      value: "startup, http-log, webhook-log, websocket-log, query-log"
+    - name: HASURA_GRAPHQL_ADMIN_SECRET
+      value: ""
 
   serverOptions: {}
-  	#- name: HASURA_GRAPHQL_ADMIN_SECRET
-    #  value: "{{ .Values.hasura.graphql.admin.secret }}"
 
   envPrefix: "HASURA_GRAPHQL_"
 
