@@ -45,6 +45,6 @@ From there, I can do a `helm repo add shakahl https://helm.shakahl.com`.
 
 ## License
 
-[MIT License](./LICENSE)
+[MIT License](./LICENSE.md)
 
 Check out [shakahl.com](https://shakahl.com) for contact information.
