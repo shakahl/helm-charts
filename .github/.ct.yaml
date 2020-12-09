@@ -8,3 +8,4 @@ chart-repos:
   - shakahl=https://shakahl.github.io/helm-charts
 helm-extra-args: --timeout 600s
 excluded-charts: []
+check-version-increment: false
