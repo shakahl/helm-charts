@@ -93,9 +93,9 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 
 {{- define "imagenameCliMigrationsV2" -}}
 {{- if eq .Values.image.tag "" -}}
-{{- .Values.image.repository -}}.cli-migrations-v2
+{{- printf "%s.cli-migrations-v2" .Values.image.repository -}}
 {{- else -}}
-{{- printf "%s:%s" .Values.image.repository .Values.image.tag -}}.cli-migrations-v2
+{{- printf "%s:%s.cli-migrations-v2" .Values.image.repository .Values.image.tag -}}
 {{- end -}}
 {{- end -}}
 
