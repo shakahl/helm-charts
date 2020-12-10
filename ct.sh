@@ -508,6 +508,8 @@ run_chart_testing() {
     case "${1:-}" in
     lint)
       chart_testing_args+=(lint --all)
+      chart_testing_args+=(--chart-yaml-schema="$chart_testing_config_dir/chart_schema.yaml")
+      chart_testing_args+=(--lint-conf="$chart_testing_config_dir/lintconf.yaml")
       shift
       ;;
     env)
