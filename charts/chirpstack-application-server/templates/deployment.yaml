@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chirpstack-application-server.fullname" . }}
+  labels:
+{{ include "chirpstack-application-server.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "chirpstack-application-server.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "chirpstack-application-server.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        checksum/application-config: {{ include (print $.Template.BasePath "/configmap.yaml") $ | sha256sum }}
+        checksum/application-secrets: {{ include (print $.Template.BasePath "/secrets.yaml") $ | sha256sum }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          {{- with .Values.image }}
+          image: "{{ .repository }}:{{ .tag }}"
+          imagePullPolicy: {{ .pullPolicy }}
+          {{- end }}
+          {{- if .Values.application.secretName }}
+          envFrom:
+            - secretRef: 
+                name: {{ .Values.application.secretName }}
+          {{- end }}
+          env: {{ list $.Values.application.config "" | include "recurseFlattenMap2" | nindent 12 }}
+            {{- if .Values.application.gcpServiceAccountKey -}}
+            - name: APPLICATION_SERVER__INTEGRATION__GCP_PUB_SUB__CREDENTIALS_FILE
+              value: "/gcp-sa-credential.json"
+            {{- end }}
+            {{- with .Values.application.ports }}            
+            - name: "APPLICATION_SERVER__EXTERNAL_API__BIND"
+              value: "0.0.0.0:{{ .externalApi }}"
+            - name: "APPLICATION_SERVER__API__BIND"
+              value: "0.0.0.0:{{ .api }}"
+            # - name: "APPLICATION_SERVER__API__PUBLIC_HOST"
+            #   value: "localhost:{{ .api }}"
+            - name: "JOIN_SERVER__BIND"
+              value: "0.0.0.0:{{ .joinApi }}"
+            - name: MONITORING__HEALTHCHECK_ENDPOINT
+              value: 'true'
+            - name: "MONITORING__BIND"
+              value: "0.0.0.0:{{ .http }}"
+            {{- end }}
+            {{- range $key, $val := .Values.application.secrets }}
+            - name: {{ $key | quote}}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chirpstack-application-server.fullname" $ }}-secrets
+                  key: {{ $key | quote}}
+            {{- end }}
+            {{- if .Values.extraEnv }}
+            {{ toYaml .Values.extraEnv | indent 12 }}
+            {{- end }}
+            {{- range $key, $val := .Values.application.env }}
+            - name: {{ $key | quote }}
+              value: {{ tpl $val $ | quote }}
+            {{- end }}
+          volumeMounts:
+            {{- range $key, $val := .Values.application.configFiles }}
+            - name: application-server-config-volume
+              subPath: {{ $key | quote }}
+              mountPath: "/etc/chirpstack-application-server/{{ $key }}"
+            {{- end }}
+            {{- if .Values.application.gcpServiceAccountKey }}
+            - name: application-server-secrets-volume
+              subPath: GCLOUD_SA_CREDENTIAL_BASE64
+              mountPath: "/gcp-sa-credential.json"
+            {{- end }}
+          ports:
+            {{- with .Values.application.ports }}
+            - name: api
+              containerPort: {{ .api }}
+            - name: external-api
+              containerPort: {{ .externalApi }}
+            - name: join-api
+              containerPort: {{ .joinApi }}
+            - name: http
+              containerPort: {{ .http }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /api
+              scheme: HTTP
+              port: external-api
+          readinessProbe:
+            httpGet:
+              path: /api
+              scheme: HTTP
+              port: external-api
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: application-server-config-volume
+          configMap:
+            name: {{ include "chirpstack-application-server.fullname" . }}-configuration
+        - name: application-server-secrets-volume
+          secret:
+            secretName: {{ include "chirpstack-application-server.fullname" . }}-secrets
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+
+
+

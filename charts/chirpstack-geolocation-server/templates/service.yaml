@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "chirpstack-geolocation-server.fullname" . }}
+  labels:
+    {{- include "chirpstack-geolocation-server.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: api
+      protocol: TCP
+      name: api
+  selector:
+    {{- include "chirpstack-geolocation-server.selectorLabels" . | nindent 4 }}

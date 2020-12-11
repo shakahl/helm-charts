@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chirpstack-geolocation-server.fullname" . }}-configuration
+  labels:
+{{ include "chirpstack-geolocation-server.labels" . | indent 4 }}
+data:
+  chirpstack-geolocation-server.toml: {{ .Values.geolocation_server_config_file }}
+  

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chirpstack-gateway-bridge.fullname" . }}-configuration
+  labels:
+{{ include "chirpstack-gateway-bridge.labels" . | indent 4 }}
+data:
+  chirpstack-gateway-gridge.toml: {{ .Values.gateway_bridge_config_file }}

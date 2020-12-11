@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chirpstack-geolocation-server.fullname" . }}
+  labels:
+    {{- include "chirpstack-geolocation-server.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "chirpstack-geolocation-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "chirpstack-geolocation-server.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "chirpstack-geolocation-server.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- with .Values.image }}
+          image: "{{ .repository }}:{{ .tag }}"
+          imagePullPolicy: {{ .pullPolicy }}
+          {{- end }}
+          env:
+            {{- with .Values.ports }}
+            - name: GEO_SERVER_GEO_SERVER_API_BIND
+              value: "0.0.0.0:{{ .api }}"
+              {{- if .prometheus }}
+            - name: "GEO_SERVER_METRICS_PROMETHEUS_ENDPOINT_ENABLED"
+              value: "true"
+            - name: GEO_SERVER_METRICS_PROMETHEUS_BIND
+              value: "0.0.0.0:{{ .prometheus }}"
+              {{- end }}
+            {{- end }}
+            {{- if .Values.requestLogDir }}
+            - name: GEO_SERVER_GEO_SERVER_API_GEO_SERVER_BACKEND_REQUEST_LOG_DIR
+              value: {{ .Values.requestLogDir }}
+            {{- end }}
+          volumeMounts:
+          - name: chirpstack-geolocation-server-config-volume
+            mountPath: /etc/chirpstack-geolocation-server/chirpstack-geolocation-server.toml
+            subPath: chirpstack-geolocation-server.toml
+          {{- if .Values.requestLogDir }}
+          - name: request-log-pv
+            mountPath: {{ .Values.requestLogDir }}
+          {{- end }}
+          ports:
+            {{- with .Values.ports }}
+            - name: api
+              containerPort: {{ .api }}
+              {{- if .prometheus }}
+            - name: prometheus
+              containerPort: {{ .prometheus }}
+              {{- end }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: api
+            initialDelaySeconds: 150
+          readinessProbe:
+            httpGet:
+              path: /
+              port: api
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: chirpstack-geolocation-server-config-volume
+        configMap:
+          name: {{ include "chirpstack-geolocation-server.fullname" . }}-configuration
+      {{- if .Values.requestLogDir }}
+      - name: request-log-pv
+        persistentVolumeClaim:
+        claimName: {{ include "chirpstack-geolocation-server.fullname" . }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

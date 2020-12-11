@@ -1,0 +1,8 @@
+apiVersion: v2
+name: chirpstack-geolocation-server
+description: A Helm chart for ChirpStack Geolocation Server
+
+type: application
+
+version: 0.0.0
+appVersion: 0.0.0

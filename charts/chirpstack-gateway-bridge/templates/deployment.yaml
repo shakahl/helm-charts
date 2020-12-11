@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chirpstack-gateway-bridge.fullname" . }}
+  labels:
+    {{- include "chirpstack-gateway-bridge.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "chirpstack-gateway-bridge.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "chirpstack-gateway-bridge.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "chirpstack-gateway-bridge.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- with .Values.image }}
+          image: "{{ .repository }}:{{ .tag }}"
+          imagePullPolicy: {{ .pullPolicy }}
+          {{- end }}
+          env:
+            {{- with .Values.ports }}
+            - name: "BACKEND_BACKEND_SEMTECH_UDP_UDP_BIND"
+              value: "0.0.0.0:{{ .semtech }}"
+            - name: "BACKEND_BACKEND_BASIC_STATION_BIND"
+              value: ":{{ .basic_station }}"
+              {{- if .prometheus }}
+            - name: "METRICS_METRICS_PROMETHEUS_ENDPOINT_ENABLED"
+              value: "true"
+            - name: "METRICS_METRICS_PROMETHEUS_BIND"
+              value: "0.0.0.0:{{ .prometheus }}"
+              {{- end }}
+            {{- end }}
+          volumeMounts:
+          - name: chirpstack-gateway-bridge
+            mountPath: /etc/chirpstack-gateway-bridge/chirpstack-gateway-bridge.toml
+            subPath: chirpstack-gateway-bridge.toml
+          ports:
+            {{- with .Values.ports }}
+            - name: semtech
+              containerPort: {{ .semtech }}
+              protocol: UDP
+            - name: basic_station
+              containerPort: {{ .basic_station }}
+              {{- if .prometheus }}
+            - name: prometheus
+              containerPort: {{ .prometheus }}
+              {{- end }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: basic_station
+              initialDelaySeconds: 150
+          readinessProbe:
+            httpGet:
+              path: /
+              port: basic_station
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: chirpstack-gateway-bridge
+        configMap:
+          name: {{ include "chirpstack-gateway-bridge.fullname" . }}-configuration
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
