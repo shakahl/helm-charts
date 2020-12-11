@@ -1,0 +1,219 @@
+# Default values for chirpstack-network-server.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: chirpstack/chirpstack-network-server
+  tag: "3.9"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+  apiPort: 8000
+  gatewayApiPort: 8002
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+extraEnv:
+
+extraVolumes:
+
+# ------------------------------------------------------------------------------
+# Runtime application configuration
+# ------------------------------------------------------------------------------
+
+application:
+
+  # Application secrets if any...
+  secretName:
+  secretChecksum:
+
+  gcpServiceAccountKey:
+
+  ports:
+    http: 80
+    api: 8000
+    gatewayApi: 8002
+  
+  # Configuration options
+  # 
+  # IMPORTANT: Nested values will be translated to ENVIRONMENT VARIABLES! 
+  # ---------------------------------------------------------------------------
+  config:
+    
+    # Don not set postgresql.dsn !!!
+    # postgresql:
+    #   dsn:
+
+    redis:
+      url: redis://127.0.0.1:6379
+    network_server:
+      net_id: "000000"
+      band:
+        name: "EU_863_870"
+      rx1_delay: 3
+      # gateway:
+      #   backend:
+      #     type: mqtt
+      #     mqtt:
+      #       server: tcp://mosquitto:1883
+      #     gcp_pub_sub:
+      #       credentials_file: "/gcp-sa-credential.json"
+      #       project_id: chirpstack-stack-tutorial
+      #       uplink_topic_name: eu868-gateway-events
+      #       downlink_topic_name: eu868-gateway-commands
+      #       uplink_retention_duration: "24h0m0s"
+    join_server:
+      default:
+        server: http://chirpstack-application-server:8003
+    geolocation_server:
+      server: chirpstack-geolocation-server:8005
+    metrics:
+      timezone: "Local"
+  
+  # Secrets
+  # ---------------------------------------------------------------------------
+  secrets:
+    POSTGRESQL__DSN: ''
+  
+  # Environment variables to be injected additionally
+  # ---------------------------------------------------------------------------
+  env: {}
+
+  # Configuration files mapping: 
+  # ---------------------------------------------------------------------------
+  configFiles:
+
+    # Configuration file template for network server
+    chirpstack-network-server.toml: |-
+      # chirpstack-network-server.toml
+      # See https://www.chirpstack.io/network-server/install/config/ for a full
+      # configuration example and documentation.
+      #
+      # This file is for the EU868 band. See the examples/ folder for more
+      # configuration examples.
+
+      [postgresql]
+      #dsn="postgres://chirpstack_ns:chirpstack_ns@postgresql/chirpstack_ns?sslmode=disable"
+
+      [redis]
+      #url="redis://redis:6379"
+
+      [network_server]
+      net_id="000000"
+
+      [network_server.band]
+      name="EU868"
+
+      rx1_delay=3
+
+      [network_server.network_settings]
+
+        [[network_server.network_settings.extra_channels]]
+        frequency=867100000
+        min_dr=0
+        max_dr=5
+
+        [[network_server.network_settings.extra_channels]]
+        frequency=867300000
+        min_dr=0
+        max_dr=5
+
+        [[network_server.network_settings.extra_channels]]
+        frequency=867500000
+        min_dr=0
+        max_dr=5
+
+        [[network_server.network_settings.extra_channels]]
+        frequency=867700000
+        min_dr=0
+        max_dr=5
+
+        [[network_server.network_settings.extra_channels]]
+        frequency=867900000
+        min_dr=0
+        max_dr=5
+
+      [network_server.gateway.backend.mqtt]
+      #server="tcp://mosquitto:1883"
+
+      [join_server.default]
+      #server="http://chirpstack-application-server:8003"
+
+      [geolocation_server]
+      # server="chirpstack-geolocation-server:8005"
+
+      [metrics]
+      timezone="Local"
+    
+    # # Service account json secret file for Google Cloud Project
+    # gcp-sa.json: |-
+    #   {
+    #     "type": "service_account",
+    #     "project_id": "project-dummy",
+    #     "private_key_id": "d6e618e9e39676141476844042de3bd5aacee2bb",
+    #     "private_key": "-----BEGIN PRIVATE KEY-----\n ... \n-----END PRIVATE KEY-----\n",
+    #     "client_email": "sa-project-dummy-app-1@project-dummy.iam.gserviceaccount.com",
+    #     "client_id": "100000000000000000001",
+    #     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    #     "token_uri": "https://oauth2.googleapis.com/token",
+    #     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    #     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/sa-project-dummy-app-1%project-dummy.iam.gserviceaccount.com"
+    #   }
+

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "chirpstack-gateway-bridge.fullname" . }}
+  labels:
+    {{- include "chirpstack-gateway-bridge.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: semtech
+      protocol: UDP
+      name: semtech
+  selector:
+    {{- include "chirpstack-gateway-bridge.selectorLabels" . | nindent 4 }}

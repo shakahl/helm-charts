@@ -1,0 +1,163 @@
+# Default values for chirpstack-application-server.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: chirpstack/chirpstack-application-server
+  tag: "3.10"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  #type: LoadBalancer
+  type: ClusterIP
+  port: 80
+  apiPort: 8001
+  externalApiPort: 8080
+  joinApiPort: 8003
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# ------------------------------------------------------------------------------
+# Runtime application configuration
+# ------------------------------------------------------------------------------
+
+application:
+
+  # Application secrets if any...
+  secretName:
+  secretChecksum:
+
+  gcpServiceAccountKey:
+
+  ports:
+    http: 80
+    api: 8001
+    externalApi: 8080
+    joinApi: 8003
+
+  # Configuration options
+  # 
+  # IMPORTANT: Nested values will be translated to ENVIRONMENT VARIABLES! 
+  # ---------------------------------------------------------------------------
+  config:
+
+    redis:
+      url: redis://redis:6379
+      
+    # application_server:
+    #   integration:
+    #     mqtt:
+    #       server: tcp://mosquitto:1883
+    #     gcp_pub_sub:
+    #       project_id: 'chirpstack-tutorial'
+    #       topic_name: 'chirpstack-application-server'
+    #   api:
+    #     public_host: chirpstack-application-server-1.chirpstack.svc.cluster.local:8001
+  
+  # Secrets
+  # ---------------------------------------------------------------------------
+  
+  secrets:
+    POSTGRESQL__DSN: ''
+    APPLICATION_SERVER__EXTERNAL_API__JWT_SECRET: ''
+  
+  # Environment variables to be injected additionally
+  # ---------------------------------------------------------------------------
+  
+  env: {}
+
+  # Configuration files mapping: 
+  # ---------------------------------------------------------------------------
+  
+  configFiles:
+
+    # Configuration file for application server
+    chirpstack-application-server.toml: |-
+      # General
+      # -----------------------------------------------------------
+      [general]
+      # Log level (debug=5, info=4, warning=3, error=2, fatal=1, panic=0)
+      log_level=2
+
+      # Log to syslog. When set to true, log messages are being written to syslog.
+      log_to_syslog=false
+
+      # Application server
+      # -----------------------------------------------------------
+      [application_server]
+      
+        [application_server.integration]
+          enabled = ["gcp_pub_sub"]
+          marshaler = "json"
+
+      # END
+    
+    # # Service account json secret file for Google Cloud Project
+    # gcp-sa.json: |-
+    #   {
+    #     "type": "service_account",
+    #     "project_id": "project-dummy",
+    #     "private_key_id": "d6e618e9e39676141476844042de3bd5aacee2bb",
+    #     "private_key": "-----BEGIN PRIVATE KEY-----\n ... \n-----END PRIVATE KEY-----\n",
+    #     "client_email": "sa-project-dummy-app-1@project-dummy.iam.gserviceaccount.com",
+    #     "client_id": "100000000000000000001",
+    #     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    #     "token_uri": "https://oauth2.googleapis.com/token",
+    #     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    #     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/sa-project-dummy-app-1%project-dummy.iam.gserviceaccount.com"
+    #   }

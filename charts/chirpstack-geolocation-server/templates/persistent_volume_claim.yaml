@@ -1,0 +1,15 @@
+{{- if .Values.requestLogDir }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "chirpstack-geolocation-server.fullname" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.pvc }}
+  storageClassName: "{{ .storageClassName }}"
+  resources:
+    requests:
+      storage: "{{ .size }}"
+  {{- end }}
+{{- end }}

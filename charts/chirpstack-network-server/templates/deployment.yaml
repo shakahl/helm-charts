@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chirpstack-network-server.fullname" . }}
+  labels:
+{{ include "chirpstack-network-server.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "chirpstack-network-server.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "chirpstack-network-server.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        checksum/application-config: {{ include (print $.Template.BasePath "/configmap.yaml") $ | sha256sum }}
+        checksum/application-secrets: {{ include (print $.Template.BasePath "/secrets.yaml") $ | sha256sum }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          {{- with .Values.image }}
+          image: "{{ .repository }}:{{ .tag }}"
+          imagePullPolicy: {{ .pullPolicy }}
+          {{- end }}
+          {{- if .Values.application.secretName }}
+          envFrom:
+            - secretRef: 
+                name: {{ .Values.application.secretName }}
+          {{- end }}
+          env: {{ list $.Values.application.config "" | include "recurseFlattenMap2" | nindent 12 }}
+            {{- if .Values.application.gcpServiceAccountKey -}}
+            - name: NETWORK_SERVER__GATEWAY__BACKEND__GCP_PUB_SUB__CREDENTIALS_FILE
+              value: "/gcp-sa-credential.json"
+            {{- end }}
+            - name: MONITORING__HEALTHCHECK_ENDPOINT
+              value: 'true'
+            - name: "MONITORING__BIND"
+              value: "0.0.0.0:{{ .Values.application.ports.http }}"
+            - name: "NETWORK_SERVER__API__BIND"
+              value: "0.0.0.0:{{ .Values.application.ports.api }}"
+            - name: "NETWORK_SERVER__GATEWAY__API__BIND"
+              value: "0.0.0.0:{{ .Values.application.ports.gatewayApi }}"
+            {{- range $key, $val := .Values.application.secrets }}
+            - name: {{ $key | quote}}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chirpstack-network-server.fullname" $ }}-secrets
+                  key: {{ $key | quote}}
+            {{- end }}
+            {{- if .Values.extraEnv }}
+            {{ toYaml .Values.extraEnv | indent 12 }}
+            {{- end }}
+            {{- range $key, $val := .Values.application.env }}
+            - name: {{ $key | quote }}
+              value: {{ tpl $val $ | quote }}
+            {{- end }}
+          volumeMounts:
+            {{- range $key, $val := .Values.application.configFiles }}
+            - name: network-server-config-volume
+              subPath: {{ $key | quote }}
+              mountPath: "/etc/chirpstack-network-server/{{ $key }}"
+            {{- end }}
+            {{- if .Values.application.gcpServiceAccountKey }}
+            - name: network-server-secrets-volume
+              subPath: GCLOUD_SA_CREDENTIAL_BASE64
+              mountPath: "/gcp-sa-credential.json"
+            {{- end }}
+          ports:
+            {{- with .Values.application.ports }}
+            - name: http
+              containerPort: {{ .http }}
+            - name: api
+              containerPort: {{ .api }}
+            - name: gateway-api
+              containerPort: {{ .gatewayApi }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              scheme: HTTP
+              port: {{ .Values.application.ports.http }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              scheme: HTTP
+              port: {{ .Values.application.ports.http }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: network-server-config-volume
+          configMap:
+            name: {{ include "chirpstack-network-server.fullname" . }}-configuration
+        - name: network-server-secrets-volume
+          secret:
+            secretName: {{ include "chirpstack-network-server.fullname" . }}-secrets
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
